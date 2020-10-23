@@ -1,4 +1,4 @@
-package TestPackage;
+package VistaAdmin;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,13 +10,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.table.DefaultTableModel;
 
 /*
  * Una vez que el usuario se identifique como admin,
@@ -27,14 +28,15 @@ public class VentanaAdmin extends JFrame {
 	
 	private JPanel contentPane;
 	
+	//Texto done se pone la consulta de SQL
 	private JTextArea textConsultas;
 	private JButton confirmarConsulta;
+	
+	//Tabla que muestra el resultado de la ultima consutlta
 	private JTable tablaResultado;
 	
-	public static void main(String[] args) {
-		new VentanaAdmin();
-	}
-	
+	private JList<String> listaBaseDatos;
+		
 	public VentanaAdmin() {
 		super();
 		inicializarFrame();
@@ -66,6 +68,28 @@ public class VentanaAdmin extends JFrame {
 			}			
 		});
 		contentPane.add(confirmarConsulta);		
+		
+		//Lista con las tablas de la base de datos
+		try {
+			//DEBERIA TENER UNA SOLA CONEXION EN TODA LA VENTANA???
+			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/parquimetros?serverTimezone=America/Argentina/Buenos_Aires", "admin", "admin");
+			Statement statement = connection.createStatement();
+			ResultSet rs = statement.executeQuery("SHOW TABLES;");
+			Vector<String> aux = new Vector<String>();
+			while (rs.next()) {
+				aux.add(rs.getString(1));
+			}			
+			DefaultListModel<String> model = new DefaultListModel<String>();
+			listaBaseDatos = new JList<String>(model);
+			for (String s : aux) {
+				model.addElement(s);
+			}
+			listaBaseDatos.setBounds(50, 350, 200, 200);
+			listaBaseDatos.addMouseListener(new ListaMouseListener());
+			contentPane.add(listaBaseDatos);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}		
 	}
 	
 	
@@ -73,15 +97,11 @@ public class VentanaAdmin extends JFrame {
 		String consulta = textConsultas.getText();		
 		try {
 			ResultSet rs;
-			ResultSetMetaData md;
 			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/parquimetros?serverTimezone=America/Argentina/Buenos_Aires", "admin", "admin");
-			Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			Statement statement = connection.createStatement();
 			if (statement.execute(consulta)) {
+				//La consulta dio un resultado, se debe mostrar el resultado en la tabla
 				rs = statement.getResultSet();
-				/*md = rs.getMetaData();
-				rs.last();
-				tablaResultado = new JTable();// new JTable(rs.getRow(), md.getColumnCount());
-				rs.beforeFirst();*/
 				llenarTabla(rs);
 				
 			}
@@ -94,22 +114,26 @@ public class VentanaAdmin extends JFrame {
 	private void llenarTabla(ResultSet rs) {
 		Vector<String> nombreColumnas = new Vector<String>();
 		Vector<Vector<Object>> datos = new Vector<Vector<Object>>();
+		Vector<Object> aux;
 		
 		try {
 			ResultSetMetaData md = rs.getMetaData();
-			for (int i=1; i<=md.getColumnCount(); i++) {
+			int cantColumnas = md.getColumnCount();	
+			//Agrego las columnas
+			for (int i=1; i<=cantColumnas; i++) {
 				nombreColumnas.add(md.getColumnLabel(i));
+			}			
+			
+			//Agrego las tuplas
+			while (rs.next()) {
+				aux = new Vector<Object>();
+				for (int i=1; i<=cantColumnas; i++) {
+					aux.add(rs.getString(i));
+				}
+				datos.add(aux);
 			}
-			Vector<Object> aux = new Vector<Object>();
-			rs.next();
-			//Simple test que solo agregar la primera tupla del resultado
-			aux.add(rs.getString(1));
-			aux.add(rs.getString(2));
-			aux.add(rs.getString(3));
-			aux.add(rs.getString(4));
-			aux.add(rs.getString(5));
-			aux.add(rs.getString(6));
-			datos.add(aux);
+			
+			//Creo la tabla con los datos de arriba
 			tablaResultado = new JTable(datos, nombreColumnas);
 			tablaResultado.setBounds(500, 150, 400, 250);
 			//El scrollpane es necesario para que los nombres de las columnas aparezcan

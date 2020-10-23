@@ -34,14 +34,29 @@ public class VentanaAdmin extends JFrame {
 	
 	//Tabla que muestra el resultado de la ultima consutlta
 	private JTable tablaResultado;
+	private JScrollPane scrollPaneResultado;
 	
 	private JList<String> listaBaseDatos;
+	private JTable tablaDescribe;
+	private JScrollPane scrollPaneDescribe;
 		
 	public VentanaAdmin() {
 		super();
 		inicializarFrame();
 		inicializarComponentes();
 		repaint();		
+	}
+	
+	public void cargarTablaDescribe(Vector<String> nombreColumnas, Vector<Vector<Object>> datos) {	
+		if (scrollPaneDescribe != null) {
+			contentPane.remove(scrollPaneDescribe);
+		}
+		tablaDescribe = new JTable(datos, nombreColumnas);
+		tablaDescribe.setBounds(500, 450, 400, 125);
+		scrollPaneDescribe = new JScrollPane(tablaDescribe);
+		scrollPaneDescribe.setBounds(500, 450, 400, 125);
+		contentPane.add(scrollPaneDescribe);
+		repaint();
 	}
 	
 	private void inicializarFrame() {
@@ -85,7 +100,7 @@ public class VentanaAdmin extends JFrame {
 				model.addElement(s);
 			}
 			listaBaseDatos.setBounds(50, 350, 200, 200);
-			listaBaseDatos.addMouseListener(new ListaMouseListener());
+			listaBaseDatos.addMouseListener(new ListaMouseListener(this));
 			contentPane.add(listaBaseDatos);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -134,13 +149,16 @@ public class VentanaAdmin extends JFrame {
 			}
 			
 			//Creo la tabla con los datos de arriba
+			if (scrollPaneResultado != null) {
+				contentPane.remove(scrollPaneResultado);
+			}
 			tablaResultado = new JTable(datos, nombreColumnas);
 			tablaResultado.setBounds(500, 150, 400, 250);
 			//El scrollpane es necesario para que los nombres de las columnas aparezcan
 			//El problema con esta tabla es que se puede editar, pero deberia ser no editable
-			JScrollPane scrollPane = new JScrollPane(tablaResultado);
-			scrollPane.setBounds(500, 150, 400, 250);
-			contentPane.add(scrollPane);
+			scrollPaneResultado = new JScrollPane(tablaResultado);
+			scrollPaneResultado.setBounds(500, 150, 400, 250);
+			contentPane.add(scrollPaneResultado);
 			repaint();
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -3,7 +3,6 @@ package VistaAdmin;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,9 +15,11 @@ import javax.swing.JList;
 public class ListaMouseListener extends MouseAdapter {
 	
 	VentanaAdmin ventana;
+	Connection connection;
 	
-	public ListaMouseListener(VentanaAdmin ventana) {
+	public ListaMouseListener(VentanaAdmin ventana, Connection connection) {
 		this.ventana = ventana;
+		this.connection = connection;
 	}
 
 	public void mouseClicked(MouseEvent e) {
@@ -34,7 +35,6 @@ public class ListaMouseListener extends MouseAdapter {
 								
 				//Pide la descripcion de la tabla
 				try {
-					Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/parquimetros?serverTimezone=America/Argentina/Buenos_Aires", "admin", "admin");
 					Statement statement = connection.createStatement();
 					ResultSet rs = statement.executeQuery("DESCRIBE " + seleccion + ";");
 					

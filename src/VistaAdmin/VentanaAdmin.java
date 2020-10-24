@@ -26,6 +26,8 @@ import javax.swing.JTextArea;
 
 public class VentanaAdmin extends JFrame {
 	
+	private Connection connection;
+	
 	private JPanel contentPane;
 	
 	//Texto done se pone la consulta de SQL
@@ -42,6 +44,11 @@ public class VentanaAdmin extends JFrame {
 		
 	public VentanaAdmin() {
 		super();
+		try {
+			connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/parquimetros?serverTimezone=America/Argentina/Buenos_Aires", "admin", "admin");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		inicializarFrame();
 		inicializarComponentes();
 		repaint();		
@@ -86,8 +93,6 @@ public class VentanaAdmin extends JFrame {
 		
 		//Lista con las tablas de la base de datos
 		try {
-			//DEBERIA TENER UNA SOLA CONEXION EN TODA LA VENTANA???
-			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/parquimetros?serverTimezone=America/Argentina/Buenos_Aires", "admin", "admin");
 			Statement statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery("SHOW TABLES;");
 			Vector<String> aux = new Vector<String>();
@@ -100,7 +105,7 @@ public class VentanaAdmin extends JFrame {
 				model.addElement(s);
 			}
 			listaBaseDatos.setBounds(50, 350, 200, 200);
-			listaBaseDatos.addMouseListener(new ListaMouseListener(this));
+			listaBaseDatos.addMouseListener(new ListaMouseListener(this, connection));
 			contentPane.add(listaBaseDatos);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -112,7 +117,6 @@ public class VentanaAdmin extends JFrame {
 		String consulta = textConsultas.getText();		
 		try {
 			ResultSet rs;
-			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/parquimetros?serverTimezone=America/Argentina/Buenos_Aires", "admin", "admin");
 			Statement statement = connection.createStatement();
 			if (statement.execute(consulta)) {
 				//La consulta dio un resultado, se debe mostrar el resultado en la tabla

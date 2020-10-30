@@ -168,5 +168,4 @@ public class VentanaAdmin extends JFrame {
 			e.printStackTrace();
 		}
 	}
-
 }
